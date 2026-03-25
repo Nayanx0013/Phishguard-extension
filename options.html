@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PhishGuard · Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#000;--surface:rgba(255,255,255,0.04);--surface2:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);--text:#fff;--text2:rgba(255,255,255,0.65);--text3:rgba(255,255,255,0.3);--text4:rgba(255,255,255,0.12);--green:#34d399;--red:#f87171;--blue:#38bdf8;--purple:#a78bfa;--amber:#fbbf24}
+body[data-theme="light"]{--bg:#f4f6fb;--surface:#fff;--surface2:#f1f3f7;--border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.18);--text:#0f0f14;--text2:#374151;--text3:#6b7280;--text4:#d1d5db}
+body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
+body[data-theme="dark"] .blob1{position:fixed;top:-120px;right:-120px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,0.25),transparent 70%);pointer-events:none;z-index:0;animation:drift 12s ease-in-out infinite}
+body[data-theme="dark"] .blob2{position:fixed;bottom:-100px;left:-80px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,0.2),transparent 70%);pointer-events:none;z-index:0;animation:drift 15s ease-in-out infinite reverse}
+body[data-theme="light"] .blob1,body[data-theme="light"] .blob2{display:none}
+@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
+.layout{display:flex;min-height:100vh;position:relative;z-index:1}
+.sidebar{width:240px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar-brand{padding:0 20px 24px;border-bottom:1px solid var(--border)}
+.sidebar-logo{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:14px}
+.logo-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:1px;color:var(--text)}
+.logo-ver{font-size:10px;color:var(--text3);letter-spacing:1px;margin-top:2px}
+.nav-section{padding:16px 12px 8px;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-left:2px solid transparent;transition:all .15s}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--surface2);color:var(--text);border-left-color:var(--purple)}
+.nav-item .ni{font-size:15px;width:20px;text-align:center}
+.main{flex:1;padding:32px 40px;max-width:860px}
+.page-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:4px;color:var(--text)}
+.page-sub{font-size:13px;color:var(--text3);margin-bottom:28px;font-weight:500}
+.section{margin-bottom:32px}
+.section-title{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:2px;margin-bottom:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:8px}
+.card-row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);gap:16px}
+.card-row:last-child{border-bottom:none}
+.row-info{flex:1}
+.row-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.row-desc{font-size:11px;color:var(--text3)}
+.row-ctrl{flex-shrink:0}
+.toggle{position:relative;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.ttrack{position:absolute;inset:0;background:var(--surface2);border:1px solid var(--border2);border-radius:11px;transition:all .2s;cursor:pointer}
+.toggle input:checked + .ttrack{background:rgba(124,58,237,0.7);border-color:rgba(124,58,237,0.9)}
+.tthumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.toggle input:checked ~ .tthumb{transform:translateX(18px)}
+.sel{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;outline:none;min-width:110px}
+.inp{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace;outline:none;width:100%;transition:border-color .2s}
+.inp:focus{border-color:rgba(124,58,237,0.5);box-shadow:0 0 0 3px rgba(124,58,237,0.1)}
+.inp::placeholder{color:var(--text3)}
+.btn{padding:8px 18px;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .2s;font-family:'Inter',sans-serif}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#0ea5e9);border:none;color:#fff}
+.btn-primary:hover{opacity:.9}
+.btn-ghost{background:var(--surface2);border:1px solid var(--border);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text)}
+.btn-danger{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:var(--red)}
+.btn-danger:hover{background:rgba(239,68,68,0.2)}
+.btn-green{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:var(--green)}
+.btn-green:hover{background:rgba(16,185,129,0.2)}
+.domain-input-row{display:flex;gap:8px;margin-bottom:10px}
+.domain-list{display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto}
+.domain-list::-webkit-scrollbar{width:4px}
+.domain-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.domain-tag{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)}
+.domain-tag .del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 2px;transition:color .2s}
+.domain-tag .del:hover{color:var(--red)}
+.empty-msg{text-align:center;color:var(--text3);padding:16px;font-size:12px;font-weight:600;letter-spacing:1px}
+.status-row{display:flex;align-items:center;gap:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+.status-dot.off{background:var(--red);box-shadow:0 0 6px var(--red)}
+.status-dot.loading{background:var(--amber);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.status-text{font-size:12px;font-weight:600}
+.score-big{background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(14,165,233,0.1));border:1px solid rgba(124,58,237,0.2);border-radius:14px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.score-num{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:var(--purple)}
+.score-info .score-lbl{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:2px;margin-bottom:4px}
+.score-level{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text)}
+.score-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.prog-row{margin-bottom:10px}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:5px}
+.prog-label span:first-child{color:var(--text2)}
+.prog-label span:last-child{color:var(--text3)}
+.prog-track{height:5px;background:var(--surface2);border-radius:5px;overflow:hidden}
+.prog-fill{height:100%;border-radius:5px;transition:width .8s ease}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.about-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.about-lbl{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:2px;margin-bottom:5px}
+.about-val{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--text)}
+.toast{position:fixed;bottom:24px;right:24px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:var(--green);padding:10px 18px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.5px;opacity:0;transform:translateY(10px);transition:all .3s;z-index:100}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.error{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.3);color:var(--red)}
+.hidden{display:none!important}
+</style>
+</head>
+<body data-theme="dark">
+<div class="blob1"></div>
+<div class="blob2"></div>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🛡️</div>
+        <div>
+          <div class="logo-name">PHISHGUARD</div>
+          <!-- FIX: version updated to v3.2 -->
+          <div class="logo-ver">v3.2 · BY NAYAN GHOSH</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-section">GENERAL</div>
+    <div class="nav-item active" data-page="scanning"><span class="ni">🔍</span>Scanning</div>
+    <div class="nav-item" data-page="protection"><span class="ni">🛡️</span>Protection</div>
+    <div class="nav-item" data-page="server"><span class="ni">⚡</span>API Server</div>
+    <div class="nav-section">LISTS</div>
+    <div class="nav-item" data-page="whitelist"><span class="ni">✅</span>Whitelist</div>
+    <div class="nav-item" data-page="blocklist"><span class="ni">🚫</span>Blocklist</div>
+    <div class="nav-section">DATA</div>
+    <div class="nav-item" data-page="stats"><span class="ni">📊</span>My Stats</div>
+    <div class="nav-item" data-page="retrain"><span class="ni">🔄</span>Auto-Retrain</div>
+    <div class="nav-item" data-page="export"><span class="ni">💾</span>Export</div>
+    <div class="nav-section">INFO</div>
+    <div class="nav-item" data-page="about"><span class="ni">ℹ️</span>About</div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- SCANNING -->
+    <div class="page active" id="page-scanning">
+      <div class="page-title">Scanning</div>
+      <div class="page-sub">Control how PhishGuard scans URLs</div>
+      <div class="section">
+        <div class="section-title">DETECTION</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Auto-scan pages</div><div class="row-desc">Automatically scan every page you visit</div></div><div class="row-ctrl"><label class="toggle"><input type="checkbox" id="s-autoScan"><div class="ttrack"></div><div class="tthumb"></div></label></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">VirusTotal check</div><div class="row-desc">Cross-reference every URL with VT database</div></div><div class="row-ctrl"><label class="toggle"><input type="checkbox" id="s-vtEnabled"><div class="ttrack"></div><div class="tthumb"></div></label></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Gmail link scanner</div><div class="row-desc">Scan all links inside Gmail emails</div></div><div class="row-ctrl"><label class="toggle"><input type="checkbox" id="s-gmailScan"><div class="ttrack"></div><div class="tthumb"></div></label></div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">SENSITIVITY</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Detection threshold</div><div class="row-desc">How aggressive the phishing detection should be</div></div><div class="row-ctrl"><select class="sel" id="s-sensitivity"><option value="low">Low — fewer alerts</option><option value="medium" selected>Medium — balanced</option><option value="high">High — maximum protection</option></select></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Confidence threshold</div><div class="row-desc">Minimum confidence % to flag as phishing (<span id="thresholdVal">40</span>%)</div></div><div class="row-ctrl" style="width:140px"><input type="range" min="20" max="80" value="40" id="s-threshold" style="width:100%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROTECTION -->
+    <div class="page hidden" id="page-protection">
+      <div class="page-title">Protection</div>
+      <div class="page-sub">Configure how PhishGuard protects you</div>
+      <div class="section">
+        <div class="section-title">BLOCKING</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Auto-block threats</div><div class="row-desc">Redirect to warning page when phishing detected</div></div><div class="row-ctrl"><label class="toggle"><input type="checkbox" id="s-autoBlock"><div class="ttrack"></div><div class="tthumb"></div></label></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Show notifications</div><div class="row-desc">Desktop alert when a phishing site is detected</div></div><div class="row-ctrl"><label class="toggle"><input type="checkbox" id="s-notifications"><div class="ttrack"></div><div class="tthumb"></div></label></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Badge counter</div><div class="row-desc">Show blocked threat count on extension icon</div></div><div class="row-ctrl"><label class="toggle"><input type="checkbox" id="s-badge"><div class="ttrack"></div><div class="tthumb"></div></label></div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">APPEARANCE</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Theme</div><div class="row-desc">Popup and options page appearance</div></div><div class="row-ctrl"><select class="sel" id="s-theme"><option value="dark">Dark (default)</option><option value="light">Light</option></select></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- API SERVER — FIX: added admin key field -->
+    <div class="page hidden" id="page-server">
+      <div class="page-title">API Server</div>
+      <div class="page-sub">Configure your PhishGuard backend connection</div>
+      <div class="section">
+        <div class="section-title">CONNECTION</div>
+        <div class="card">
+          <div class="card-row">
+            <div class="row-info"><div class="row-name">Backend status</div><div class="row-desc">Current connection to Flask API</div></div>
+            <div class="row-ctrl"><div class="status-row"><div class="status-dot loading" id="apiDot"></div><span class="status-text" id="apiStatusText">Checking...</span></div></div>
+          </div>
+          <div class="card-row">
+            <div class="row-info"><div class="row-name">API URL</div><div class="row-desc">Your Railway/Render URL or localhost</div></div>
+            <div class="row-ctrl" style="width:260px"><div style="display:flex;gap:6px"><input class="inp" id="s-apiUrl" placeholder="http://localhost:5000" style="flex:1"/><button class="btn btn-primary" id="api-save-btn">SAVE</button></div></div>
+          </div>
+          <div class="card-row">
+            <div class="row-info"><div class="row-name">VirusTotal API key</div><div class="row-desc">Your free VT key from virustotal.com</div></div>
+            <div class="row-ctrl" style="width:260px"><div style="display:flex;gap:6px"><input class="inp" id="s-vtKey" type="password" placeholder="Enter VT API key" style="flex:1"/><button class="btn btn-ghost" id="vt-save-btn">SAVE</button></div></div>
+          </div>
+          
+          <div class="card-row">
+            <div class="row-info"><div class="row-name">Admin key</div><div class="row-desc">Required for Reload Models and Trigger Retrain (set ADMIN_API_KEY in .env)</div></div>
+            <div class="row-ctrl" style="width:260px"><div style="display:flex;gap:6px"><input class="inp" id="s-adminKey" type="password" placeholder="Enter admin key" style="flex:1"/><button class="btn btn-ghost" id="admin-save-btn">SAVE</button></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">QUICK ACTIONS</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Test connection</div><div class="row-desc">Ping the backend to verify it's running</div></div><div class="row-ctrl"><button class="btn btn-ghost" id="ping-btn">PING SERVER</button></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Reload models</div><div class="row-desc">Force backend to reload ML models (requires admin key)</div></div><div class="row-ctrl"><button class="btn btn-ghost" id="reload-btn">RELOAD MODELS</button></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHITELIST -->
+    <div class="page hidden" id="page-whitelist">
+      <div class="page-title">Whitelist</div>
+      <div class="page-sub">Domains that will always be marked as SAFE — never scanned</div>
+      <div class="section">
+        <div class="domain-input-row"><input class="inp" id="wl-input" placeholder="e.g. mybank.com" style="flex:1"/><button class="btn btn-green" id="wl-add-btn">+ ADD</button></div>
+        <div class="domain-list" id="wl-list"><div class="empty-msg">NO CUSTOM DOMAINS — TYPE ABOVE TO ADD</div></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" id="wl-export-btn">💾 EXPORT</button>
+        <button class="btn btn-danger" id="wl-clear-btn">🗑 CLEAR ALL</button>
+      </div>
+    </div>
+
+    <!-- BLOCKLIST -->
+    <div class="page hidden" id="page-blocklist">
+      <div class="page-title">Custom Blocklist</div>
+      <div class="page-sub">Domains you always want blocked — regardless of ML verdict</div>
+      <div class="section">
+        <div class="domain-input-row"><input class="inp" id="bl-input" placeholder="e.g. evil-phishing.com" style="flex:1"/><button class="btn btn-danger" id="bl-add-btn">+ BLOCK</button></div>
+        <div class="domain-list" id="bl-list"><div class="empty-msg">NO CUSTOM BLOCKS — TYPE ABOVE TO ADD</div></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" id="bl-export-btn">💾 EXPORT</button>
+        <button class="btn btn-danger" id="bl-clear-btn">🗑 CLEAR ALL</button>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="page hidden" id="page-stats">
+      <div class="page-title">My Stats</div>
+      <div class="page-sub">Your personal PhishGuard security statistics</div>
+      <div class="score-big">
+        <div class="score-info"><div class="score-lbl">SECURITY SCORE</div><div class="score-level" id="opt-scoreLevel">ROOKIE 🌱</div><div class="score-sub">Keep scanning to level up</div></div>
+        <div class="score-num" id="opt-scoreNum">0</div>
+      </div>
+      <div class="section">
+        <div class="section-title">ALL TIME</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Total scanned</div></div><div class="row-ctrl" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--blue)" id="opt-scanned">0</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Threats blocked</div></div><div class="row-ctrl" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--red)" id="opt-blocked">0</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Safe sites</div></div><div class="row-ctrl" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green)" id="opt-safe">0</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Threat rate</div></div><div class="row-ctrl" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--amber)" id="opt-rate">0%</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">LEVEL PROGRESS</div>
+        <div class="card" style="padding:16px 18px">
+          <div class="prog-row"><div class="prog-label"><span>Rookie → Agent</span><span>100 pts</span></div><div class="prog-track"><div class="prog-fill" id="prog1" style="background:linear-gradient(90deg,#7c3aed,#0ea5e9)"></div></div></div>
+          <div class="prog-row"><div class="prog-label"><span>Agent → Hunter</span><span>500 pts</span></div><div class="prog-track"><div class="prog-fill" id="prog2" style="background:linear-gradient(90deg,#0ea5e9,#10b981)"></div></div></div>
+          <div class="prog-row"><div class="prog-label"><span>Hunter → Guardian</span><span>1000 pts</span></div><div class="prog-track"><div class="prog-fill" id="prog3" style="background:linear-gradient(90deg,#10b981,#fbbf24)"></div></div></div>
+          <div class="prog-row" style="margin-bottom:0"><div class="prog-label"><span>Guardian → Elite</span><span>2000 pts</span></div><div class="prog-track"><div class="prog-fill" id="prog4" style="background:linear-gradient(90deg,#fbbf24,#f87171)"></div></div></div>
+        </div>
+      </div>
+      <button class="btn btn-danger" id="reset-stats-btn">🗑 RESET ALL STATS</button>
+    </div>
+
+    <!-- AUTO-RETRAIN (was missing from sidebar nav in original) -->
+    <div class="page hidden" id="page-retrain">
+      <div class="page-title">Auto-Retrain</div>
+      <div class="page-sub">Model retraining status and controls</div>
+      <div class="section">
+        <div class="section-title">STATUS</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Currently retraining</div></div><div class="row-ctrl" id="rt-running" style="font-weight:700">—</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Last accuracy</div></div><div class="row-ctrl" id="rt-acc" style="font-weight:700">—</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Last status</div></div><div class="row-ctrl" id="rt-status" style="font-weight:700">—</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">PENDING REPORTS</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Pending safe reports</div></div><div class="row-ctrl" id="rt-safe" style="font-weight:700">0</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Pending phishing reports</div></div><div class="row-ctrl" id="rt-phish" style="font-weight:700">0</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Verified safe URLs</div></div><div class="row-ctrl" id="rt-vsafe" style="font-weight:700">0</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Verified phishing URLs</div></div><div class="row-ctrl" id="rt-vphish" style="font-weight:700">0</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Dynamic whitelist size</div></div><div class="row-ctrl" id="rt-wl" style="font-weight:700">0</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">THRESHOLDS</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Safe reports needed</div></div><div class="row-ctrl" id="rt-thresh-safe" style="font-weight:700">—</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Phishing reports needed</div></div><div class="row-ctrl" id="rt-thresh-phish" style="font-weight:700">—</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Min reports to retrain</div></div><div class="row-ctrl" id="rt-thresh-min" style="font-weight:700">—</div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Min accuracy to replace</div></div><div class="row-ctrl" id="rt-thresh-acc" style="font-weight:700">—</div></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="retrain-trigger-btn">⚡ TRIGGER RETRAIN</button>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="page hidden" id="page-export">
+      <div class="page-title">Export Data</div>
+      <div class="page-sub">Download your scan history and settings</div>
+      <div class="section">
+        <div class="section-title">SCAN HISTORY</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Export as CSV</div><div class="row-desc">Download all scan history as a spreadsheet</div></div><div class="row-ctrl"><button class="btn btn-primary" id="csv-btn">↓ DOWNLOAD CSV</button></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Export as JSON</div><div class="row-desc">Download raw scan data as JSON</div></div><div class="row-ctrl"><button class="btn btn-ghost" id="json-btn">↓ DOWNLOAD JSON</button></div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">SETTINGS BACKUP</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Export settings</div><div class="row-desc">Save your PhishGuard configuration</div></div><div class="row-ctrl"><button class="btn btn-ghost" id="export-cfg-btn">↓ EXPORT CONFIG</button></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Import settings</div><div class="row-desc">Restore a saved configuration file</div></div><div class="row-ctrl"><label class="btn btn-ghost" style="cursor:pointer">↑ IMPORT<input type="file" id="import-input" accept=".json" style="display:none"/></label></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT — FIX: dashboard link uses class="dashboard-link" -->
+    <div class="page hidden" id="page-about">
+      <div class="page-title">About PhishGuard</div>
+      <div class="page-sub">Real-time ML-powered phishing detection</div>
+      <div class="section">
+        <div class="about-grid">
+          <div class="about-item"><div class="about-lbl">VERSION</div><div class="about-val">v3.2.0</div></div>
+          <div class="about-item"><div class="about-lbl">DEVELOPER</div><div class="about-val">Nayan Ghosh</div></div>
+          <div class="about-item"><div class="about-lbl">ML FEATURES</div><div class="about-val" id="featureCount">28</div></div>
+          <div class="about-item"><div class="about-lbl">THREAT FEEDS</div><div class="about-val">10 sources</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">TECH STACK</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Backend</div><div class="row-desc">Python · Flask · SQLite · scikit-learn · PyTorch</div></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">ML Models</div><div class="row-desc">XGBoost / Random Forest + Feature-based Neural Network</div></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Threat Intel</div><div class="row-desc">OpenPhish · URLhaus · Phishing Army · mitchellkrogza · VX Vault + 5 more</div></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">Extension</div><div class="row-desc">Chrome Manifest V3 · Service Worker · Content Scripts</div></div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">LINKS</div>
+        <div class="card">
+          <div class="card-row"><div class="row-info"><div class="row-name">Dashboard</div><div class="row-desc">View threat intelligence dashboard</div></div><div class="row-ctrl"><a href="#" target="_blank" class="btn btn-primary dashboard-link">OPEN ↗</a></div></div>
+          <div class="card-row"><div class="row-info"><div class="row-name">VirusTotal</div><div class="row-desc">Get free API key</div></div><div class="row-ctrl"><a href="https://www.virustotal.com" target="_blank" class="btn btn-ghost">VISIT ↗</a></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="options.js"></script>
+</body>
+</html>

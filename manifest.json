@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "PhishGuard - By Nayan Ghosh",
+  "version": "4.0.0",
+  "description": "Real-time phishing detection using ML Ensemble + VirusTotal + Google Safe Browsing + 10 threat feeds. Now with typosquatting, homograph & redirect chain detection.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "notifications",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "https://phishguard-extension-nayan.up.railway.app/*",
+    "https://*.railway.app/*",
+    "https://*.onrender.com/*",
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PhishGuard v4.0",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["gmail_scanner.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["warning.html", "warning.js", "icons/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://phishguard-extension-nayan.up.railway.app https://*.railway.app https://*.onrender.com http://localhost:5000"
+  },
+  "options_page": "options.html"
+}
