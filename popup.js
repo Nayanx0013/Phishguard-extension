@@ -1,4 +1,3 @@
-
 var urlDisplay        = document.getElementById("urlDisplay");
 var resultBox         = document.getElementById("resultBox");
 var resultIcon        = document.getElementById("resultIcon");
@@ -243,7 +242,11 @@ function renderFeatures(features) {
     item.innerHTML = '<div class="fi-lbl">' + labels[key] + '</div><div class="fi-val ' + sc + '">' + dv + '</div>';
     featuresGrid.appendChild(item);
   }
-  featuresGrid.classList.remove("hidden");
+  // Only show if scan tab is active
+  var scanTab = document.getElementById("tab-scan");
+  if (scanTab && scanTab.classList.contains("active")) {
+    featuresGrid.classList.remove("hidden");
+  }
 }
 
 // ── MODEL BREAKDOWN — v4.0 (4 models) ────────────────────────────────────────
@@ -283,7 +286,11 @@ function renderModelBreakdown(data) {
   // Google Safe Browsing
   setV(gsbEl, models.google_safebrowsing);
 
-  bd.classList.remove("hidden");
+  // Only show if scan tab is active
+  var scanTab = document.getElementById("tab-scan");
+  if (scanTab && scanTab.classList.contains("active")) {
+    bd.classList.remove("hidden");
+  }
 }
 
 // ── SHOW RESULT ───────────────────────────────────────────────────────────────
@@ -291,10 +298,13 @@ function showResult(data) {
   if (scanProgress) scanProgress.style.width = "100%";
   currentResult = data;
 
+  var scanTabActive = document.getElementById("tab-scan") &&
+                      document.getElementById("tab-scan").classList.contains("active");
+
   // Whitelisted
   if (data.whitelisted) {
     setResultUI("safe", "✅", "WHITELISTED DOMAIN", "Trusted domain — always safe.", data.confidence || 100);
-    if (resultActions) resultActions.classList.remove("hidden");
+    if (scanTabActive && resultActions) resultActions.classList.remove("hidden");
     updateStats(false);
     return;
   }
@@ -316,12 +326,12 @@ function showResult(data) {
     conf
   );
 
-  showRiskMeter(conf, isPhishing);
+  if (scanTabActive) showRiskMeter(conf, isPhishing);
 
   // Threat explanation
   var exp = buildExplanation(data);
   if (threatExplanation) {
-    if (exp && isPhishing) {
+    if (exp && isPhishing && scanTabActive) {
       threatExplanation.textContent = exp;
       threatExplanation.classList.remove("hidden");
     } else {
@@ -330,10 +340,10 @@ function showResult(data) {
   }
 
   // Action buttons
-  if (resultActions) resultActions.classList.remove("hidden");
+  if (scanTabActive && resultActions) resultActions.classList.remove("hidden");
 
   // Confidence bar
-  if (confidenceSection) {
+  if (scanTabActive && confidenceSection) {
     confidenceSection.classList.remove("hidden");
     if (confPercent) confPercent.textContent = conf + "%";
     if (confFill) {
@@ -445,6 +455,12 @@ function shareWarning() {
 }
 
 // ── HISTORY ───────────────────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
 function loadHistory() {
   var list = document.getElementById("historyList");
   if (!list) return;
@@ -454,20 +470,25 @@ function loadHistory() {
       list.innerHTML = '<div class="hist-empty">NO SCAN HISTORY YET</div>';
       return;
     }
-    list.innerHTML = r.data.map(function(item) {
+    list.innerHTML = "";
+    r.data.forEach(function(item) {
       var conf    = item.confidence || 0;
       var ts      = item.timestamp ? item.timestamp.substring(0,16) : "";
-      var vtRatio = item.vt_ratio && item.vt_ratio !== "N/A" ? " · VT:" + item.vt_ratio : "";
-      var safeUrl = item.url.replace(/'/g, "\\'");
-      return '<div class="hist-item" onclick="rescanFromHistory(\'' + safeUrl + '\')">'
-        + '<div class="hist-dot ' + item.result + '"></div>'
+      var vtRatio = item.vt_ratio && item.vt_ratio !== "N/A" ? " · VT:" + escHtml(item.vt_ratio) : "";
+      var div = document.createElement("div");
+      div.className = "hist-item";
+      div.innerHTML =
+          '<div class="hist-dot ' + escHtml(item.result) + '"></div>'
         + '<div class="hist-info">'
-          + '<div class="hist-url">' + item.url + '</div>'
-          + '<div class="hist-meta">' + ts + ' · ' + conf + '%' + vtRatio + '</div>'
+          + '<div class="hist-url">' + escHtml(item.url) + '</div>'
+          + '<div class="hist-meta">' + escHtml(ts) + ' · ' + conf + '%' + vtRatio + '</div>'
         + '</div>'
-        + '<span class="hist-badge ' + item.result + '">' + item.result + '</span>'
-        + '</div>';
-    }).join("");
+        + '<span class="hist-badge ' + escHtml(item.result) + '">' + escHtml(item.result) + '</span>';
+      div.addEventListener("click", (function(url) {
+        return function() { rescanFromHistory(url); };
+      })(item.url));
+      list.appendChild(div);
+    });
   });
 }
 
