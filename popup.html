@@ -26,7 +26,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .orb-tr{position:fixed;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(0,245,255,0.18) 0%,transparent 70%);pointer-events:none;z-index:0;animation:orbPulse 4s ease-in-out infinite}
 .orb-bl{position:fixed;bottom:-80px;left:-80px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,0.12) 0%,transparent 70%);pointer-events:none;z-index:0;animation:orbPulse 6s ease-in-out infinite reverse}
 @keyframes orbPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.7}}
-.wrap{position:relative;z-index:1;padding:14px;max-height:600px;overflow-y:auto;overflow-x:hidden}
+.wrap{position:relative;z-index:1;padding:14px;max-height:600px;overflow-y:auto;overflow-x:hidden;isolation:isolate}
 
 /* HEADER */
 .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)}
@@ -201,9 +201,28 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .toggle input:checked ~ .toggle-thumb{transform:translateX(18px);background:var(--cyan)}
 .set-select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;cursor:pointer;outline:none}
 
-.tab-content{display:none}
-.tab-content.active{display:block}
-.hidden{display:none!important}
+.tab-content{display:none;visibility:hidden;position:absolute;pointer-events:none}
+.tab-content.active{display:block;visibility:visible;position:relative;pointer-events:auto}
+.hidden{display:none!important;visibility:hidden!important}
+
+/* ── OVERLAP FIX ─────────────────────────────────────────────────────────────
+   JS sets inline display styles on scan elements (renderModelBreakdown,
+   showResult etc). These override the parent display:none when tab is
+   inactive, causing bleed-through into history/settings tabs.
+   This rule force-hides ALL scan tab children when tab is not active.
+   ─────────────────────────────────────────────────────────────────────────── */
+#tab-scan:not(.active) > *,
+#tab-scan:not(.active) .result,
+#tab-scan:not(.active) .models-wrap,
+#tab-scan:not(.active) .conf-wrap,
+#tab-scan:not(.active) .feats,
+#tab-scan:not(.active) .score-card,
+#tab-scan:not(.active) .stats,
+#tab-scan:not(.active) .footer,
+#tab-scan:not(.active) .url-card,
+#tab-scan:not(.active) .prog-wrap {
+  display:none !important;
+}
 </style>
 </head>
 <body>
