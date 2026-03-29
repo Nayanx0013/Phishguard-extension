@@ -1,4 +1,3 @@
-
 var DEFAULT_API = "https://nayanx0013-phishguard-extension.hf.space";
 
 function getApiBase(cb) {
@@ -6,7 +5,6 @@ function getApiBase(cb) {
     cb(d.apiUrl && d.apiUrl.trim() ? d.apiUrl.trim() : DEFAULT_API);
   });
 }
-
 
 function getAdminKey(cb) {
   chrome.storage.local.get("adminKey", function(d) {
@@ -54,7 +52,6 @@ chrome.runtime.onInstalled.addListener(function(details) {
   updateBadge();
 });
 
-
 chrome.contextMenus.onClicked.addListener(function(info, tab) {
   var url = info.menuItemId === "scan-link" ? info.linkUrl : (tab && tab.url);
   if (!url) return;
@@ -71,10 +68,8 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
   });
 });
 
-// ── MESSAGE HANDLER ───────────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
 
-  // POST /predict
   if (msg.type === "SCAN_URL") {
     doScan(msg.url, function(d, e) {
       sendResponse(e ? { success:false, error:e } : { success:true, data:d });
@@ -82,41 +77,34 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     return true;
   }
 
-  
-   if (msg.type === "REPORT_URL") {
-  if (!msg.url || !/^https?:\/\//i.test(msg.url)) {
-    sendResponse({ success:false, error:"Invalid URL scheme" });
+  if (msg.type === "REPORT_URL") {
+    if (!msg.url || !/^https?:\/\//i.test(msg.url)) {
+      sendResponse({ success:false, error:"Invalid URL scheme" });
+      return true;
+    }
+    getApiBase(async function(base) {
+      try {
+        const res = await fetch(base + "/report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: msg.url, label: msg.label, note: msg.note || "" })
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          console.error("Report failed:", res.status, text);
+          sendResponse({ success:false, error:"Server error: " + res.status });
+          return;
+        }
+        const data = await res.json();
+        sendResponse({ success:true, data });
+      } catch (err) {
+        console.error("Network error:", err);
+        sendResponse({ success:false, error:"Network error: " + err.message });
+      }
+    });
     return true;
   }
 
-  getApiBase(async function(base) {
-    try {
-      const res = await fetch(base + "/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: msg.url, label: msg.label, note: msg.note || "" })
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Report failed:", res.status, text);
-        sendResponse({ success:false, error:"Server error: " + res.status });
-        return;
-      }
-
-      const data = await res.json();
-      sendResponse({ success:true, data });
-    } catch (err) {
-      console.error("Network error:", err);
-      sendResponse({ success:false, error:"Network error: " + err.message });
-    }
-  });
-
-  return true; // keep sendResponse alive
-}
-
-
-  // GET /history?limit=N
   if (msg.type === "GET_HISTORY") {
     var lim = msg.limit || 10;
     getApiBase(function(base) {
@@ -128,7 +116,6 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     return true;
   }
 
-  // GET /stats
   if (msg.type === "GET_STATS") {
     getApiBase(function(base) {
       fetch(base + "/stats")
@@ -139,7 +126,6 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     return true;
   }
 
-  // GET /
   if (msg.type === "PING_API") {
     getApiBase(function(base) {
       var ctrl = new AbortController();
@@ -152,7 +138,6 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     return true;
   }
 
- 
   if (msg.type === "RELOAD_MODELS") {
     getApiBase(function(base) {
       getAdminKey(function(key) {
@@ -167,7 +152,6 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     return true;
   }
 
-  // GET /retrain/status
   if (msg.type === "RETRAIN_STATUS") {
     getApiBase(function(base) {
       fetch(base + "/retrain/status")
@@ -178,7 +162,6 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     return true;
   }
 
-  
   if (msg.type === "RETRAIN_TRIGGER") {
     getApiBase(function(base) {
       getAdminKey(function(key) {
@@ -193,7 +176,6 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     return true;
   }
 
-  // POST /predict/batch — max 50 URLs
   if (msg.type === "SCAN_BATCH") {
     getApiBase(function(base) {
       fetch(base + "/predict/batch", {
@@ -211,7 +193,6 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
   if (msg.type === "UPDATE_BADGE") { updateBadge(); sendResponse({ success:true }); }
 });
 
-// ── AUTO SCAN ON PAGE LOAD ────────────────────────────────────────────────────
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
   if (changeInfo.status !== "complete" || !tab.url) return;
 
@@ -220,7 +201,6 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (tab.url.indexOf(skip[i]) === 0) return;
   }
 
-  
   if (!/^https?:\/\//i.test(tab.url)) return;
 
   chrome.storage.local.get(["settings","bypassList","whitelist","blocklist"], function(store) {
@@ -289,7 +269,6 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     });
   });
 });
-
 
 function doScan(url, cb) {
   if (!url || !/^https?:\/\//i.test(url)) {

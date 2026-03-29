@@ -1,3 +1,4 @@
+var HF_API = "https://nayanx0013-phishguard-extension.hf.space";
 
 function showPage(name) {
   document.querySelectorAll('.page').forEach(function(p){ p.classList.add('hidden'); });
@@ -13,7 +14,6 @@ function showPage(name) {
   if (name==='retrain')   loadRetrainStatus();
 }
 
-// ── TOAST ─────────────────────────────────────────────────────────────────────
 function toast(msg, err) {
   var t = document.getElementById('toast');
   if (!t) return;
@@ -22,13 +22,11 @@ function toast(msg, err) {
   setTimeout(function(){ t.className='toast'; }, 2500);
 }
 
-// ── THEME ─────────────────────────────────────────────────────────────────────
 function applyTheme(theme) {
   document.body.dataset.theme = theme;
   chrome.storage.local.set({ theme:theme }, function(){ toast('Theme saved ✓'); });
 }
 
-// ── LOAD ALL SETTINGS ─────────────────────────────────────────────────────────
 function loadAllSettings() {
   chrome.storage.local.get(['settings','theme','apiUrl','vtKey','adminKey'], function(d) {
     var s = d.settings || {};
@@ -51,20 +49,18 @@ function loadAllSettings() {
     if (thm) thm.value = d.theme || 'dark';
     document.body.dataset.theme = d.theme || 'dark';
     var apiInp = document.getElementById('s-apiUrl');
-    if (apiInp) apiInp.value = d.apiUrl || 'https://nayanx0013-phishguard-extension.hf.space';
+    if (apiInp) apiInp.value = d.apiUrl || HF_API;
     var vtInp = document.getElementById('s-vtKey');
     if (vtInp && d.vtKey) vtInp.value = d.vtKey;
-    // FIX: load admin key
     var adminInp = document.getElementById('s-adminKey');
     if (adminInp && d.adminKey) adminInp.value = d.adminKey;
   });
   updateDashboardLinks();
 }
 
-// FIX: Update all dashboard links from storage instead of hardcoded localhost
 function updateDashboardLinks() {
   chrome.storage.local.get('apiUrl', function(d) {
-    var base = d.apiUrl || 'https://nayanx0013-phishguard-extension.hf.space/dashboard';
+    var base = d.apiUrl || HF_API;
     document.querySelectorAll('.dashboard-link').forEach(function(a) {
       a.href = base + '/dashboard';
     });
@@ -98,7 +94,6 @@ function saveVtKey() {
   chrome.storage.local.set({ vtKey:val }, function(){ toast('VT key saved ✓'); });
 }
 
-// FIX: Save admin key to storage.adminKey so background.js getAdminKey() can read it
 function saveAdminKey() {
   var inp = document.getElementById('s-adminKey');
   var val = inp ? inp.value.trim() : '';
@@ -107,7 +102,6 @@ function saveAdminKey() {
   });
 }
 
-// ── SERVER ────────────────────────────────────────────────────────────────────
 function pingServer() {
   var dot  = document.getElementById('apiDot');
   var text = document.getElementById('apiStatusText');
@@ -128,12 +122,11 @@ function pingServer() {
       if (fc) fc.textContent = d.feature_count || 28;
     } else {
       dot.className    = 'status-dot off';
-      text.textContent = 'Offline — run: python app.py or check Railway';
+      text.textContent = 'Offline — check Hugging Face Space';
     }
   });
 }
 
-// FIX: reloadModels now goes through background.js which adds X-Admin-Key header
 function reloadModels() {
   chrome.runtime.sendMessage({ type:'RELOAD_MODELS' }, function(r) {
     if (r && r.success && r.data) {
@@ -146,7 +139,6 @@ function reloadModels() {
   });
 }
 
-// ── STATS ─────────────────────────────────────────────────────────────────────
 function loadStats() {
   chrome.storage.local.get(['scanned','blocked','safe','securityScore'], function(d) {
     var sc    = d.scanned       || 0;
@@ -171,7 +163,6 @@ function loadStats() {
   });
 }
 
-// Two-click reset
 function resetStats() {
   var btn = document.getElementById('reset-stats-btn');
   if (!btn) return;
@@ -188,7 +179,6 @@ function resetStats() {
   }
 }
 
-// ── RETRAIN STATUS ────────────────────────────────────────────────────────────
 function loadRetrainStatus() {
   chrome.runtime.sendMessage({ type:'RETRAIN_STATUS' }, function(r) {
     if (!r || !r.success || !r.data) return;
@@ -215,7 +205,6 @@ function loadRetrainStatus() {
   });
 }
 
-// FIX: triggerRetrain goes through background.js which adds X-Admin-Key header
 function triggerRetrain() {
   var btn = document.getElementById('retrain-trigger-btn');
   if (btn) { btn.textContent='⏳ RETRAINING...'; btn.disabled=true; }
@@ -240,7 +229,6 @@ function triggerRetrain() {
   });
 }
 
-// ── DOMAIN LISTS ──────────────────────────────────────────────────────────────
 function renderList(type) {
   chrome.storage.local.get(type, function(d) {
     var list = d[type] || [];
@@ -309,7 +297,6 @@ function exportList(type) {
   });
 }
 
-// ── EXPORT ────────────────────────────────────────────────────────────────────
 function exportCSV() {
   chrome.runtime.sendMessage({ type:'GET_HISTORY', limit:1000 }, function(r) {
     if (!r || !r.success || !r.data) { toast('Failed or no data', true); return; }
@@ -370,7 +357,6 @@ function importSettings(input) {
   reader.readAsText(file);
 }
 
-// ── WIRE UP ALL EVENTS ────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.nav-item[data-page]').forEach(function(item) {
     item.addEventListener('click', function(){ showPage(this.dataset.page); });
@@ -403,7 +389,6 @@ document.addEventListener('DOMContentLoaded', function() {
   var reloadBtn = document.getElementById('reload-btn');
   var apiSave   = document.getElementById('api-save-btn');
   var vtSaveBtn = document.getElementById('vt-save-btn');
-  // FIX: admin key save button
   var adminSave = document.getElementById('admin-save-btn');
   if (pingBtn)   pingBtn.addEventListener('click',   pingServer);
   if (reloadBtn) reloadBtn.addEventListener('click', reloadModels);

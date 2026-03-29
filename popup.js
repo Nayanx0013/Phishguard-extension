@@ -24,7 +24,9 @@ var themeBtn          = document.getElementById("themeBtn");
 var currentUrl    = "";
 var currentResult = null;
 
-// ── TOAST ─────────────────────────────────────────────────────────────────────
+// FIX: Updated to correct dashboard URL (no stray quote)
+var HF_DASHBOARD = "https://nayanx0013-phishguard-extension.hf.space/dashboard";
+
 function showToast(msg, isError) {
   var t = document.getElementById("pg-toast");
   if (!t) return;
@@ -41,13 +43,11 @@ function showToast(msg, isError) {
   }, 2500);
 }
 
-// ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(name, btn) {
   document.querySelectorAll(".tab-content").forEach(function(t) { t.classList.remove("active"); });
   document.querySelectorAll(".tab-btn").forEach(function(b) { b.classList.remove("active"); });
   document.getElementById("tab-" + name).classList.add("active");
   btn.classList.add("active");
-  // FIX: Hide scan result panels when leaving scan tab — prevents visual overlap
   if (name !== "scan") {
     ["modelBreakdown","confidenceSection","featuresGrid",
      "riskMeter","threatExplanation","resultActions"].forEach(function(id) {
@@ -59,7 +59,6 @@ function switchTab(name, btn) {
   if (name === "settings") loadSettings();
 }
 
-// ── THEME ─────────────────────────────────────────────────────────────────────
 function initTheme() {
   chrome.storage.local.get("theme", function(d) {
     var theme = d.theme || "dark";
@@ -76,7 +75,6 @@ if (themeBtn) {
   });
 }
 
-// ── STATS ─────────────────────────────────────────────────────────────────────
 function loadStats() {
   chrome.storage.local.get(["scanned","blocked","safe","securityScore"], function(d) {
     if (scannedCount) scannedCount.textContent = d.scanned || 0;
@@ -125,7 +123,6 @@ function resetStats() {
   }
 }
 
-// ── PROGRESS BAR ──────────────────────────────────────────────────────────────
 function animateProgress(callback) {
   var p = 0;
   var iv = setInterval(function() {
@@ -135,7 +132,6 @@ function animateProgress(callback) {
   }, 100);
 }
 
-// ── RISK METER ────────────────────────────────────────────────────────────────
 function showRiskMeter(confidence, isPhishing) {
   if (!riskMeter) return;
   riskMeter.classList.remove("hidden");
@@ -154,14 +150,12 @@ function showRiskMeter(confidence, isPhishing) {
   }
 }
 
-// ── THREAT EXPLANATION — v4.0 (42 features + new_signals) ────────────────────
 function buildExplanation(data) {
   if (!data || !data.features) return "";
   var f  = data.features;
   var ns = data.new_signals || {};
   var reasons = [];
 
-  // Original feature signals
   if (f.suspicious_tld)                          reasons.push("suspicious TLD");
   if (f.brand_impersonation)                     reasons.push("brand impersonation detected");
   if (f.high_entropy_domain)                     reasons.push("algorithmically generated domain");
@@ -173,8 +167,6 @@ function buildExplanation(data) {
   if (f.is_new_domain && f.domain_age_days > -1) reasons.push("new domain (" + f.domain_age_days + " days old)");
   if (f.subdomain_count > 3)                     reasons.push(f.subdomain_count + " subdomains");
   if (f.url_length > 100)                        reasons.push("very long URL (" + f.url_length + " chars)");
-
-  // New v4.0 signals
   if (ns.typosquatting   || f.typosquatting)     reasons.push("typosquatting — mimics a trusted brand");
   if (ns.homograph_attack|| f.homograph_attack)  reasons.push("homograph/punycode attack");
   if (ns.gsb_flagged     || f.gsb_flagged)       reasons.push("flagged by Google Safe Browsing");
@@ -183,8 +175,6 @@ function buildExplanation(data) {
   if (ns.is_proxy_hosting)                       reasons.push("hosted on proxy/datacenter");
   if (f.title_brand_mismatch)                    reasons.push("page title impersonates a brand");
   if (f.form_external_action)                    reasons.push("form submits to external domain");
-
-  // VT + score
   if (data.models && data.models.virustotal === "PHISHING")
     reasons.push("flagged by VirusTotal (" + ((data.virustotal && data.virustotal.vt_ratio) || "") + ")");
   if (data.weighted_score)
@@ -194,28 +184,16 @@ function buildExplanation(data) {
   return "⚠️ Flagged: " + reasons.slice(0, 4).join(", ");
 }
 
-// ── FEATURES GRID ─────────────────────────────────────────────────────────────
 function renderFeatures(features) {
   if (!featuresGrid) return;
   featuresGrid.innerHTML = "";
   var labels = {
-    url_length:          "URL LENGTH",
-    has_ip:              "IP ADDRESS",
-    has_at:              "@ SYMBOL",
-    is_https:            "HTTPS",
-    suspicious_keywords: "KEYWORDS",
-    dot_count:           "DOT COUNT",
-    subdomain_count:     "SUBDOMAINS",
-    has_redirect:        "REDIRECT",
-    suspicious_tld:      "SUSP TLD",
-    brand_impersonation: "BRAND IMPERSON",
-    high_entropy_domain: "HIGH ENTROPY",
-    domain_entropy:      "ENTROPY",
-    typosquatting:       "TYPOSQUAT",
-    homograph_attack:    "HOMOGRAPH",
-    gsb_flagged:         "GOOGLE GSB",
-    high_risk_country:   "RISK COUNTRY",
-    is_proxy_hosting:    "PROXY HOST"
+    url_length:"URL LENGTH", has_ip:"IP ADDRESS", has_at:"@ SYMBOL",
+    is_https:"HTTPS", suspicious_keywords:"KEYWORDS", dot_count:"DOT COUNT",
+    subdomain_count:"SUBDOMAINS", has_redirect:"REDIRECT", suspicious_tld:"SUSP TLD",
+    brand_impersonation:"BRAND IMPERSON", high_entropy_domain:"HIGH ENTROPY",
+    domain_entropy:"ENTROPY", typosquatting:"TYPOSQUAT", homograph_attack:"HOMOGRAPH",
+    gsb_flagged:"GOOGLE GSB", high_risk_country:"RISK COUNTRY", is_proxy_hosting:"PROXY HOST"
   };
   for (var key in features) {
     if (!labels[key]) continue;
@@ -228,13 +206,13 @@ function renderFeatures(features) {
                       "brand_impersonation","high_entropy_domain","typosquatting",
                       "homograph_attack","gsb_flagged","high_risk_country","is_proxy_hosting"];
       var goodTrue = ["is_https"];
-      if (goodTrue.indexOf(key) >= 0)   { sc = value ? "ok"  : "bad";  dv = value ? "YES ✓" : "NO ✗"; }
-      else if (badTrue.indexOf(key) >= 0){ sc = value ? "bad" : "ok";   dv = value ? "YES ✗" : "NO ✓"; }
-      else                               { sc = "neutral";               dv = value ? "YES"   : "NO";   }
+      if (goodTrue.indexOf(key) >= 0)    { sc = value ? "ok"  : "bad"; dv = value ? "YES ✓" : "NO ✗"; }
+      else if (badTrue.indexOf(key) >= 0){ sc = value ? "bad" : "ok";  dv = value ? "YES ✗" : "NO ✓"; }
+      else                               { sc = "neutral";              dv = value ? "YES"   : "NO";   }
     } else {
-      if (key === "url_length")      sc = value > 75  ? "bad" : value > 50 ? "neutral" : "ok";
-      else if (key === "dot_count")  sc = value > 4   ? "bad" : value > 2  ? "neutral" : "ok";
-      else if (key === "subdomain_count") sc = value > 3 ? "bad" : value > 1 ? "neutral" : "ok";
+      if (key === "url_length")           sc = value > 75  ? "bad" : value > 50 ? "neutral" : "ok";
+      else if (key === "dot_count")       sc = value > 4   ? "bad" : value > 2  ? "neutral" : "ok";
+      else if (key === "subdomain_count") sc = value > 3   ? "bad" : value > 1  ? "neutral" : "ok";
       else if (key === "domain_entropy")  sc = value > 3.5 ? "bad" : "ok";
       else sc = "neutral";
       dv = typeof value === "number" ? parseFloat(value.toFixed(3)) : value;
@@ -242,14 +220,12 @@ function renderFeatures(features) {
     item.innerHTML = '<div class="fi-lbl">' + labels[key] + '</div><div class="fi-val ' + sc + '">' + dv + '</div>';
     featuresGrid.appendChild(item);
   }
-  // Only show if scan tab is active
   var scanTab = document.getElementById("tab-scan");
   if (scanTab && scanTab.classList.contains("active")) {
     featuresGrid.classList.remove("hidden");
   }
 }
 
-// ── MODEL BREAKDOWN — v4.0 (4 models) ────────────────────────────────────────
 function renderModelBreakdown(data) {
   var bd     = document.getElementById("modelBreakdown");
   var rfEl   = document.getElementById("rfResult");
@@ -271,7 +247,6 @@ function renderModelBreakdown(data) {
   setV(rfEl,   models.random_forest);
   setV(lstmEl, models.lstm);
 
-  // VT shows ratio e.g. "3/72"
   var vtAvail = vt.vt_result && vt.vt_result !== "UNAVAILABLE" && vt.vt_result !== "TIMEOUT";
   if (vtEl) {
     if (vtAvail) {
@@ -283,17 +258,14 @@ function renderModelBreakdown(data) {
     }
   }
 
-  // Google Safe Browsing
   setV(gsbEl, models.google_safebrowsing);
 
-  // Only show if scan tab is active
   var scanTab = document.getElementById("tab-scan");
   if (scanTab && scanTab.classList.contains("active")) {
     bd.classList.remove("hidden");
   }
 }
 
-// ── SHOW RESULT ───────────────────────────────────────────────────────────────
 function showResult(data) {
   if (scanProgress) scanProgress.style.width = "100%";
   currentResult = data;
@@ -301,7 +273,6 @@ function showResult(data) {
   var scanTabActive = document.getElementById("tab-scan") &&
                       document.getElementById("tab-scan").classList.contains("active");
 
-  // Whitelisted
   if (data.whitelisted) {
     setResultUI("safe", "✅", "WHITELISTED DOMAIN", "Trusted domain — always safe.", data.confidence || 100);
     if (scanTabActive && resultActions) resultActions.classList.remove("hidden");
@@ -309,7 +280,6 @@ function showResult(data) {
     return;
   }
 
-  // Skipped internal URL
   if (data.skipped) {
     setResultUI("safe", "✅", "INTERNAL PAGE", "Internal URL — not scanned.", 100);
     return;
@@ -328,7 +298,6 @@ function showResult(data) {
 
   if (scanTabActive) showRiskMeter(conf, isPhishing);
 
-  // Threat explanation
   var exp = buildExplanation(data);
   if (threatExplanation) {
     if (exp && isPhishing && scanTabActive) {
@@ -339,10 +308,8 @@ function showResult(data) {
     }
   }
 
-  // Action buttons
   if (scanTabActive && resultActions) resultActions.classList.remove("hidden");
 
-  // Confidence bar
   if (scanTabActive && confidenceSection) {
     confidenceSection.classList.remove("hidden");
     if (confPercent) confPercent.textContent = conf + "%";
@@ -370,7 +337,6 @@ function setResultUI(cls, icon, title, sub, conf) {
   if (resultSubtitle) resultSubtitle.textContent = sub;
 }
 
-// ── ERROR STATE ───────────────────────────────────────────────────────────────
 function showError(msg) {
   if (scanProgress) scanProgress.style.width = "100%";
   var scanAnim = document.getElementById("scanAnim");
@@ -385,7 +351,6 @@ function showError(msg) {
   if (resultActions)  resultActions.classList.add("hidden");
 }
 
-// ── MAIN SCAN ─────────────────────────────────────────────────────────────────
 function scanURL(url) {
   currentUrl = url;
   if (urlDisplay) urlDisplay.textContent = url.length > 45 ? url.substring(0,45) + "..." : url;
@@ -434,7 +399,6 @@ function getCurrentTabAndScan() {
   });
 }
 
-// ── REPORT ────────────────────────────────────────────────────────────────────
 function reportUrl(label) {
   if (!currentUrl) return;
   chrome.runtime.sendMessage({ type:"REPORT_URL", url:currentUrl, label:label, note:"" }, function(r) {
@@ -443,7 +407,6 @@ function reportUrl(label) {
   });
 }
 
-// ── SHARE ─────────────────────────────────────────────────────────────────────
 function shareWarning() {
   if (!currentUrl || !currentResult) return;
   var isPhishing = currentResult.result === "PHISHING";
@@ -454,7 +417,6 @@ function shareWarning() {
   chrome.tabs.create({ url: "https://wa.me/?text=" + encodeURIComponent(msg) });
 }
 
-// ── HISTORY ───────────────────────────────────────────────────────────────────
 function escHtml(str) {
   return String(str)
     .replace(/&/g,"&amp;").replace(/</g,"&lt;")
@@ -502,7 +464,6 @@ function rescanFromHistory(url) {
   scanURL(url);
 }
 
-// ── SETTINGS ──────────────────────────────────────────────────────────────────
 function loadSettings() {
   chrome.storage.local.get(["settings","apiUrl"], function(d) {
     var s = d.settings || {};
@@ -540,29 +501,19 @@ function checkApi() {
         (d.gsb_enabled?"GSB✓" : "GSB✗");
       el.style.color = "#34d399";
     } else {
-      el.textContent = "❌ Offline — run: python app.py";
+      el.textContent = "❌ Offline — check Hugging Face Space";
       el.style.color = "#f87171";
     }
   });
 }
-
-// ── INIT ──────────────────────────────────────────────────────────────────────────────
-// ROOT CAUSE FIX: popup.js is loaded via <script src> at end of <body>.
-// By that point the DOM is parsed but Chrome extension popups fire
-// DOMContentLoaded BEFORE the external script executes — so
-// document.addEventListener("DOMContentLoaded", fn) NEVER fires.
-// All setup must happen at top level, wrapped in a self-executing function
-// to keep variables scoped, called immediately.
 
 (function init() {
   initTheme();
   loadStats();
   getCurrentTabAndScan();
 
-  // Rescan button
   if (rescanBtn) rescanBtn.addEventListener("click", getCurrentTabAndScan);
 
-  // Tab switching
   var tabScan     = document.getElementById("tab-btn-scan");
   var tabHistory  = document.getElementById("tab-btn-history");
   var tabSettings = document.getElementById("tab-btn-settings");
@@ -570,36 +521,25 @@ function checkApi() {
   if (tabHistory)  tabHistory.addEventListener("click",  function() { switchTab("history",  this); });
   if (tabSettings) tabSettings.addEventListener("click", function() { switchTab("settings", this); });
 
-  // History refresh
   var histRefreshBtn = document.getElementById("histRefreshBtn");
   if (histRefreshBtn) histRefreshBtn.addEventListener("click", loadHistory);
 
-  // ── ACTION BUTTONS ─────────────────────────────────────────────────────────
-  // FIX: These were inside DOMContentLoaded which never fired in extension popup.
-  // Now wired directly. reportUrl() and shareWarning() are defined above.
   var btnSafe  = document.getElementById("btn-report-safe");
   var btnPhish = document.getElementById("btn-report-phish");
   var btnShare = document.getElementById("btn-share");
 
-  if (btnSafe) {
-    btnSafe.addEventListener("click", function() {
-      if (!currentUrl) { showToast("No URL to report", true); return; }
-      reportUrl("safe");
-    });
-  }
-  if (btnPhish) {
-    btnPhish.addEventListener("click", function() {
-      if (!currentUrl) { showToast("No URL to report", true); return; }
-      reportUrl("phishing");
-    });
-  }
-  if (btnShare) {
-    btnShare.addEventListener("click", function() {
-      shareWarning();
-    });
-  }
+  if (btnSafe)  btnSafe.addEventListener("click",  function() { if (!currentUrl) { showToast("No URL to report", true); return; } reportUrl("safe"); });
+  if (btnPhish) btnPhish.addEventListener("click", function() { if (!currentUrl) { showToast("No URL to report", true); return; } reportUrl("phishing"); });
+  if (btnShare) btnShare.addEventListener("click", function() { shareWarning(); });
 
-  // Settings toggles
+  // FIX 1: intelBtn now correctly found in DOM (changed from <a> to <button id="intelBtn"> in HTML)
+  // FIX 2: dashboardBtn now correctly found in DOM (changed from <a> to <button id="dashboardBtn"> in HTML)
+  // FIX 3: HF_DASHBOARD URL has no stray quote — opens correct dashboard page
+  var intelBtn     = document.getElementById("intelBtn");
+  var dashboardBtn = document.getElementById("dashboardBtn");
+  if (intelBtn)     intelBtn.addEventListener("click",     function() { chrome.tabs.create({ url: HF_DASHBOARD }); });
+  if (dashboardBtn) dashboardBtn.addEventListener("click", function() { chrome.tabs.create({ url: HF_DASHBOARD }); });
+
   [["set-autoScan","autoScan"],["set-vtEnabled","vtEnabled"],
    ["set-autoBlock","autoBlock"],["set-notifications","notifications"]].forEach(function(p) {
     var el = document.getElementById(p[0]);

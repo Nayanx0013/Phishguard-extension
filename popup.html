@@ -122,7 +122,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .conf-track{height:3px;background:var(--bg3);border-radius:3px;overflow:hidden}
 .conf-fill{height:100%;border-radius:3px;width:0%;transition:width .7s ease}
 
-/* MODEL BREAKDOWN — 4 columns for v4.0 */
+/* MODEL BREAKDOWN */
 .models-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px;position:relative;overflow:hidden}
 .models-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--purple),transparent)}
 .models-lbl{font-family:'Orbitron',monospace;font-size:8px;font-weight:700;color:var(--text3);letter-spacing:3px;margin-bottom:10px}
@@ -205,12 +205,6 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .tab-content.active{display:block;visibility:visible;position:relative;pointer-events:auto}
 .hidden{display:none!important;visibility:hidden!important}
 
-/* ── OVERLAP FIX ─────────────────────────────────────────────────────────────
-   JS sets inline display styles on scan elements (renderModelBreakdown,
-   showResult etc). These override the parent display:none when tab is
-   inactive, causing bleed-through into history/settings tabs.
-   This rule force-hides ALL scan tab children when tab is not active.
-   ─────────────────────────────────────────────────────────────────────────── */
 #tab-scan:not(.active) > *,
 #tab-scan:not(.active) .result,
 #tab-scan:not(.active) .models-wrap,
@@ -325,9 +319,10 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="stat"><div class="stat-num" id="safeCount">0</div><div class="stat-lbl">SAFE</div></div>
     </div>
 
+    <!-- FIX: Removed stray ' from href. Added id="intelBtn" for JS listener. -->
     <div class="footer">
       <button class="foot-btn" id="rescanBtn">↺ RESCAN</button>
-      <a class="foot-btn" href="'https://nayanx0013-phishguard-extension.hf.space/dashboard" target="_blank">📊 INTEL</a>
+      <button class="foot-btn" id="intelBtn">📊 INTEL</button>
       <span class="foot-tag">BY NAYANGHOSH</span>
     </div>
   </div>
@@ -338,8 +333,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <div class="hist-list" id="historyList">
       <div class="hist-empty">LOADING HISTORY...</div>
     </div>
+    <!-- FIX: Removed stray ' from href. Added id="dashboardBtn" for JS listener. -->
     <div class="footer" style="margin-top:8px">
-      <a class="foot-btn" href="'https://nayanx0013-phishguard-extension.hf.space/dashboard" target="_blank">📊 FULL DASHBOARD</a>
+      <button class="foot-btn" id="dashboardBtn">📊 FULL DASHBOARD</button>
     </div>
   </div>
 
