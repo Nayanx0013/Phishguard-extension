@@ -16,9 +16,7 @@
     "contextMenus"
   ],
   "host_permissions": [
-    "https://phishguard-extension-nayan.up.railway.app/*",
-    "https://*.railway.app/*",
-    "https://*.onrender.com/*",
+    "https://nayanx0013-phishguard-extension.hf.space/*",
     "<all_urls>"
   ],
   "action": {
@@ -46,7 +44,7 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://phishguard-extension-nayan.up.railway.app https://*.railway.app https://*.onrender.com http://localhost:5000"
-  },
+  "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://nayanx0013-phishguard-extension.hf.space http://localhost:5000"
+},
   "options_page": "options.html"
 }

@@ -51,7 +51,7 @@ function loadAllSettings() {
     if (thm) thm.value = d.theme || 'dark';
     document.body.dataset.theme = d.theme || 'dark';
     var apiInp = document.getElementById('s-apiUrl');
-    if (apiInp) apiInp.value = d.apiUrl || 'https://phishguard-extension-nayan.up.railway.app';
+    if (apiInp) apiInp.value = d.apiUrl || 'https://nayanx0013-phishguard-extension.hf.space';
     var vtInp = document.getElementById('s-vtKey');
     if (vtInp && d.vtKey) vtInp.value = d.vtKey;
     // FIX: load admin key
@@ -64,7 +64,7 @@ function loadAllSettings() {
 // FIX: Update all dashboard links from storage instead of hardcoded localhost
 function updateDashboardLinks() {
   chrome.storage.local.get('apiUrl', function(d) {
-    var base = d.apiUrl || 'https://phishguard-extension-nayan.up.railway.app';
+    var base = d.apiUrl || 'https://nayanx0013-phishguard-extension.hf.space/dashboard';
     document.querySelectorAll('.dashboard-link').forEach(function(a) {
       a.href = base + '/dashboard';
     });

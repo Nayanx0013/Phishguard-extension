@@ -14,7 +14,7 @@ if (confParam) {
 } else {
   // Fetch from backend to get full data
   chrome.storage.local.get("apiUrl", function(d) {
-    var base = d.apiUrl || "https://phishguard-extension-nayan.up.railway.app";
+    var base = d.apiUrl || "https://nayanx0013-phishguard-extension.hf.space";
     fetch(base + "/predict", {
       method:  "POST",
       headers: { "Content-Type":"application/json" },

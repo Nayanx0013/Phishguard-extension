@@ -1,5 +1,5 @@
 
-var DEFAULT_API = "https://phishguard-extension-nayan.up.railway.app";
+var DEFAULT_API = "https://nayanx0013-phishguard-extension.hf.space";
 
 function getApiBase(cb) {
   chrome.storage.local.get("apiUrl", function(d) {
