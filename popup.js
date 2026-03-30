@@ -532,9 +532,6 @@ function checkApi() {
   if (btnPhish) btnPhish.addEventListener("click", function() { if (!currentUrl) { showToast("No URL to report", true); return; } reportUrl("phishing"); });
   if (btnShare) btnShare.addEventListener("click", function() { shareWarning(); });
 
-  // FIX 1: intelBtn now correctly found in DOM (changed from <a> to <button id="intelBtn"> in HTML)
-  // FIX 2: dashboardBtn now correctly found in DOM (changed from <a> to <button id="dashboardBtn"> in HTML)
-  // FIX 3: HF_DASHBOARD URL has no stray quote — opens correct dashboard page
   var intelBtn     = document.getElementById("intelBtn");
   var dashboardBtn = document.getElementById("dashboardBtn");
   if (intelBtn)     intelBtn.addEventListener("click",     function() { chrome.tabs.create({ url: HF_DASHBOARD }); });

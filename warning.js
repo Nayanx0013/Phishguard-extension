@@ -91,7 +91,12 @@ if (source === "blocklist") {
 
 document.getElementById("btnBack").addEventListener("click", function() {
   chrome.tabs.getCurrent(function(tab) {
-    chrome.tabs.update(tab.id, { url:"chrome://newtab/" });
+    
+    if (tab) {
+      chrome.tabs.update(tab.id, { url:"chrome://newtab/" });
+    } else {
+      window.location.href = "chrome://newtab/";
+    }
   });
 });
 
@@ -120,7 +125,12 @@ proceedBtn.addEventListener("click", function() {
       if (!list.includes(blockedUrl)) list.push(blockedUrl);
       chrome.storage.local.set({ bypassList:list }, function() {
         chrome.tabs.getCurrent(function(tab) {
-          chrome.tabs.update(tab.id, { url:blockedUrl });
+          
+          if (tab) {
+            chrome.tabs.update(tab.id, { url:blockedUrl });
+          } else {
+            window.location.href = blockedUrl;
+          }
         });
       });
     });
