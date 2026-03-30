@@ -192,6 +192,22 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     return true;
   }
 
+  // ── NEW: Sync whitelist domain to backend — no retrain triggered ────────────
+  if (msg.type === "WHITELIST_ADD") {
+    getApiBase(function(base) {
+      fetch(base + "/whitelist/add", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ domain: msg.domain })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { sendResponse({ success:true, data:d }); })
+      .catch(function(e) { sendResponse({ success:false, error:e.message }); });
+    });
+    return true;
+  }
+  // ───────────────────────────────────────────────────────────────────────────
+
   if (msg.type === "UPDATE_BADGE") { updateBadge(); sendResponse({ success:true }); }
 });
 
@@ -219,9 +235,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     } catch(e) {}
 
     if (bypass.includes(tab.url)) return;
-    
-    
-    
+
     try {
       var bypassDomain = new URL(tab.url).hostname.toLowerCase().replace("www.","");
       if (bypass.some(function(u) {
