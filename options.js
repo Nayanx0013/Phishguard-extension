@@ -28,7 +28,7 @@ function applyTheme(theme) {
 }
 
 function loadAllSettings() {
-  chrome.storage.local.get(['settings','theme','apiUrl','vtKey','adminKey'], function(d) {
+  chrome.storage.local.get(['settings','theme','apiUrl','adminKey'], function(d) {
     var s = d.settings || {};
     function setChk(id, v){ var e=document.getElementById(id); if(e) e.checked=v!==false; }
     setChk('s-autoScan',      s.autoScan      !== false);
@@ -87,12 +87,6 @@ function saveApiUrl() {
   });
 }
 
-function saveVtKey() {
-  var inp = document.getElementById('s-vtKey');
-  var val = inp ? inp.value.trim() : '';
-  if (!val) return;
-  chrome.storage.local.set({ vtKey:val }, function(){ toast('VT key saved ✓'); });
-}
 
 function saveAdminKey() {
   var inp = document.getElementById('s-adminKey');
@@ -388,12 +382,10 @@ document.addEventListener('DOMContentLoaded', function() {
   var pingBtn   = document.getElementById('ping-btn');
   var reloadBtn = document.getElementById('reload-btn');
   var apiSave   = document.getElementById('api-save-btn');
-  var vtSaveBtn = document.getElementById('vt-save-btn');
   var adminSave = document.getElementById('admin-save-btn');
   if (pingBtn)   pingBtn.addEventListener('click',   pingServer);
   if (reloadBtn) reloadBtn.addEventListener('click', reloadModels);
   if (apiSave)   apiSave.addEventListener('click',   saveApiUrl);
-  if (vtSaveBtn) vtSaveBtn.addEventListener('click', saveVtKey);
   if (adminSave) adminSave.addEventListener('click', saveAdminKey);
 
   var wlAdd = document.getElementById('wl-add-btn');

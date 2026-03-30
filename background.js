@@ -141,6 +141,7 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
   if (msg.type === "RELOAD_MODELS") {
     getApiBase(function(base) {
       getAdminKey(function(key) {
+        if (!key) { sendResponse({ success:false, error:"Admin key required" }); return; }
         var headers = { "Content-Type":"application/json" };
         if (key) headers["X-Admin-Key"] = key;
         fetch(base + "/reload", { method:"POST", headers:headers })
@@ -165,6 +166,7 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
   if (msg.type === "RETRAIN_TRIGGER") {
     getApiBase(function(base) {
       getAdminKey(function(key) {
+        if (!key) { sendResponse({ success:false, error:"Admin key required" }); return; }
         var headers = { "Content-Type":"application/json" };
         if (key) headers["X-Admin-Key"] = key;
         fetch(base + "/retrain/trigger", { method:"POST", headers:headers })
