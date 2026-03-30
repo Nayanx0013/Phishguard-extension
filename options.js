@@ -87,7 +87,6 @@ function saveApiUrl() {
   });
 }
 
-
 function saveAdminKey() {
   var inp = document.getElementById('s-adminKey');
   var val = inp ? inp.value.trim() : '';
@@ -240,6 +239,7 @@ function renderList(type) {
   });
 }
 
+// ── UPDATED: addToList now syncs whitelist domains to backend server ──────────
 function addToList(type) {
   var inpId = type==='whitelist'?'wl-input':'bl-input';
   var inp   = document.getElementById(inpId);
@@ -251,9 +251,23 @@ function addToList(type) {
     if (list.includes(val)) { toast('Already in list', true); return; }
     list.push(val);
     var update = {}; update[type]=list;
-    chrome.storage.local.set(update, function(){ inp.value=''; renderList(type); toast('Added: '+val+' ✓'); });
+    chrome.storage.local.set(update, function(){
+      inp.value=''; renderList(type); toast('Added: '+val+' ✓');
+      // Sync to backend server if whitelist — no retrain triggered
+      if (type === 'whitelist') {
+        chrome.runtime.sendMessage({ type:'WHITELIST_ADD', domain: val }, function(r) {
+          if (r && r.success) {
+            toast('Synced to server ✓');
+          } else {
+            // Still saved locally — server sync failed silently
+            toast('Saved locally (server sync failed)', false);
+          }
+        });
+      }
+    });
   });
 }
+// ─────────────────────────────────────────────────────────────────────────────
 
 function removeFromList(type, domain) {
   chrome.storage.local.get(type, function(d) {
