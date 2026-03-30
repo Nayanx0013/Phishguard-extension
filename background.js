@@ -217,6 +217,16 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     } catch(e) {}
 
     if (bypass.includes(tab.url)) return;
+    
+    
+    
+    try {
+      var bypassDomain = new URL(tab.url).hostname.toLowerCase().replace("www.","");
+      if (bypass.some(function(u) {
+        try { return new URL(u).hostname.toLowerCase().replace("www.","") === bypassDomain; }
+        catch(e) { return false; }
+      })) return;
+    } catch(e) {}
 
     try {
       var bld = new URL(tab.url).hostname.toLowerCase().replace("www.","");

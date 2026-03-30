@@ -1,5 +1,3 @@
-
-
 var scanned = new Map();
 
 function makeShield(result) {
@@ -38,7 +36,7 @@ function scanLink(link) {
   var shield = makeShield("pending");
   link.parentNode && link.after(shield);
 
-  // Route through background.js → POST /predict on Railway
+  
   chrome.runtime.sendMessage({ type:"SCAN_URL", url:url }, function(response) {
     if (chrome.runtime.lastError || !response || !response.success) {
       scanned.set(url, "error");
@@ -55,24 +53,21 @@ function scanLink(link) {
     }
 
     var data   = response.data;
-    var result = data.result; // "SAFE" or "PHISHING"
+    var result = data.result; 
     scanned.set(url, result);
     updateShield(shield, result, data);
 
     if (result === "PHISHING") {
-      // Strike through phishing links in Gmail
+      
       link.style.cssText = "color:#ef4444!important;text-decoration:line-through!important;opacity:0.7!important;";
 
-      // Click on shield opens warning page
+      
       shield.addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         var conf = data.confidence || 0;
-        chrome.runtime.sendMessage({
-          type: "SCAN_URL",
-          url:  "chrome-extension://warning?url="+encodeURIComponent(url)+"&conf="+conf
-        });
-        // Open warning page in new tab
+        
+    
         window.open(
           chrome.runtime.getURL("warning.html") +
           "?url=" + encodeURIComponent(url) +

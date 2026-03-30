@@ -44,7 +44,7 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://nayanx0013-phishguard-extension.hf.space http://localhost:5000"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src *"
   },
   "options_page": "options.html"
 }
