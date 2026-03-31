@@ -263,33 +263,50 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     } catch(e) {}
 
     doScan(tab.url, function(result, err) {
-      if (err || !result || result.result !== "PHISHING") return;
-
+      if (err || !result) return;
+      var verdict   = result.result || "SAFE";
       var conf      = result.confidence || 0;
       var threshold = s.threshold !== undefined ? s.threshold : 40;
 
-      chrome.storage.local.get(["sessionBlocked","weeklyBlocked"], function(d) {
-        chrome.storage.local.set({
-          sessionBlocked: (d.sessionBlocked||0)+1,
-          weeklyBlocked:  (d.weeklyBlocked||0)+1
+      // ── PHISHING: hard block ─────────────────────────────────────────────
+      if (verdict === "PHISHING") {
+        chrome.storage.local.get(["sessionBlocked","weeklyBlocked"], function(d) {
+          chrome.storage.local.set({
+            sessionBlocked: (d.sessionBlocked||0)+1,
+            weeklyBlocked:  (d.weeklyBlocked||0)+1
+          });
+          updateBadge((d.sessionBlocked||0)+1);
         });
-        updateBadge((d.sessionBlocked||0)+1);
-      });
-
-      addScore(10);
-
-      if (s.notifications !== false) {
-        chrome.notifications.create("pg-threat-"+Date.now(), {
-          type:"basic", iconUrl:"icons/icon48.png", priority:2,
-          title:   "PhishGuard — Threat Blocked",
-          message: "Phishing ("+conf+"%): " + tab.url.substring(0,65)
-        });
+        addScore(10);
+        if (s.notifications !== false) {
+          chrome.notifications.create("pg-threat-"+Date.now(), {
+            type:"basic", iconUrl:"icons/icon48.png", priority:2,
+            title:   "PhishGuard — Threat Blocked",
+            message: "Phishing ("+conf+"%): " + tab.url.substring(0,65)
+          });
+        }
+        if (conf >= threshold) {
+          chrome.tabs.update(tabId, {
+            url: chrome.runtime.getURL("warning.html") +
+                 "?url=" + encodeURIComponent(tab.url) +
+                 "&conf=" + conf + "&verdict=PHISHING"
+          });
+        }
       }
 
-      if (conf >= threshold) {
+      // ── SUSPICIOUS: soft warning — redirect to warning page with yellow state
+      else if (verdict === "SUSPICIOUS" && conf >= 35) {
+        if (s.notifications !== false) {
+          chrome.notifications.create("pg-suspicious-"+Date.now(), {
+            type:"basic", iconUrl:"icons/icon48.png", priority:1,
+            title:   "PhishGuard — Suspicious Site",
+            message: "Proceed with caution ("+conf+"%): " + tab.url.substring(0,55)
+          });
+        }
         chrome.tabs.update(tabId, {
           url: chrome.runtime.getURL("warning.html") +
-               "?url=" + encodeURIComponent(tab.url) + "&conf=" + conf
+               "?url=" + encodeURIComponent(tab.url) +
+               "&conf=" + conf + "&verdict=SUSPICIOUS"
         });
       }
     });

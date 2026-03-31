@@ -19,6 +19,9 @@ function updateShield(span, result, data) {
   if (result === "PHISHING") {
     span.textContent = "🚨";
     span.title       = "⚠️ PhishGuard: PHISHING DETECTED"+conf+vtr;
+  } else if (result === "SUSPICIOUS") {
+    span.textContent = "⚠️";
+    span.title       = "⚠️ PhishGuard: SUSPICIOUS link — proceed with caution"+conf+vtr;
   } else if (result === "SAFE") {
     span.textContent = "✅";
     span.title       = "✅ PhishGuard: Safe link"+conf+vtr;
@@ -36,7 +39,6 @@ function scanLink(link) {
   var shield = makeShield("pending");
   link.parentNode && link.after(shield);
 
-  
   chrome.runtime.sendMessage({ type:"SCAN_URL", url:url }, function(response) {
     if (chrome.runtime.lastError || !response || !response.success) {
       scanned.set(url, "error");
@@ -53,25 +55,38 @@ function scanLink(link) {
     }
 
     var data   = response.data;
-    var result = data.result; 
+    var result = data.result;
     scanned.set(url, result);
     updateShield(shield, result, data);
 
     if (result === "PHISHING") {
-      
+      // Red strikethrough for phishing
       link.style.cssText = "color:#ef4444!important;text-decoration:line-through!important;opacity:0.7!important;";
 
-      
       shield.addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
-        var conf = data.confidence || 0;
-        
-    
         window.open(
           chrome.runtime.getURL("warning.html") +
           "?url=" + encodeURIComponent(url) +
-          "&conf=" + conf,
+          "&conf=" + (data.confidence || 0) +
+          "&verdict=PHISHING",
+          "_blank"
+        );
+      });
+
+    } else if (result === "SUSPICIOUS") {
+      // Amber/yellow styling for suspicious — softer than phishing
+      link.style.cssText = "color:#f59e0b!important;opacity:0.85!important;";
+
+      shield.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(
+          chrome.runtime.getURL("warning.html") +
+          "?url=" + encodeURIComponent(url) +
+          "&conf=" + (data.confidence || 0) +
+          "&verdict=SUSPICIOUS",
           "_blank"
         );
       });
@@ -80,7 +95,6 @@ function scanLink(link) {
 }
 
 function scanAllLinks() {
- 
   var selectors = [
     ".a3s a[href]",
     ".gmail_quote a[href]",
@@ -96,7 +110,6 @@ function scanAllLinks() {
     });
   });
 }
-
 
 var observer = new MutationObserver(function() {
   scanAllLinks();

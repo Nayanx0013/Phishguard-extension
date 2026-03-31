@@ -1,9 +1,31 @@
 var params     = new URLSearchParams(window.location.search);
-var blockedUrl = params.get("url")    || "Unknown URL";
-var confParam  = params.get("conf")   || null;
-var source     = params.get("source") || "ml";
+var blockedUrl = params.get("url")      || "Unknown URL";
+var confParam  = params.get("conf")     || null;
+var source     = params.get("source")   || "ml";
+var verdict    = params.get("verdict")  || "PHISHING";
 
 document.getElementById("blockedUrl").textContent = blockedUrl;
+
+// ── SUSPICIOUS yellow state ───────────────────────────────────────────────────
+if (verdict === "SUSPICIOUS") {
+  var card  = document.querySelector(".card");
+  var h1    = document.querySelector("h1");
+  var sub   = document.querySelector(".sub");
+  var shield = document.querySelector(".shield");
+  if (card)   { card.style.borderColor  = "rgba(255,170,0,0.4)"; card.style.boxShadow = "0 0 60px rgba(255,170,0,0.15)"; }
+  if (h1)     { h1.textContent = "SUSPICIOUS SITE"; h1.style.color = "#ffaa00"; }
+  if (sub)    { sub.textContent = "PhishGuard detected risk signals — proceed with caution"; }
+  if (shield) { shield.textContent = "⚠️"; }
+  // Show proceed button immediately for SUSPICIOUS (no double-click needed)
+  var proceedBtn = document.getElementById("btnProceed");
+  if (proceedBtn) {
+    proceedBtn.style.borderColor = "rgba(255,170,0,0.4)";
+    proceedBtn.style.color       = "#ffaa00";
+  }
+  var blob1 = document.querySelector(".blob1");
+  if (blob1) blob1.style.background = "radial-gradient(circle,rgba(255,170,0,0.3),transparent 70%)";
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 if (confParam) {
   document.getElementById("confBadge").textContent = "Confidence: " + confParam + "%";

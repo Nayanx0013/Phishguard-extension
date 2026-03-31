@@ -285,18 +285,30 @@ function showResult(data) {
     return;
   }
 
-  var isPhishing = data.result === "PHISHING";
-  var conf       = data.confidence || 0;
+  var isPhishing   = data.result === "PHISHING";
+  var isSuspicious = data.result === "SUSPICIOUS";
+  var conf         = data.confidence || 0;
 
-  setResultUI(
-    isPhishing ? "danger" : "safe",
-    isPhishing ? "🚨"     : "✅",
-    isPhishing ? "PHISHING DETECTED" : "SITE IS SAFE",
-    isPhishing ? "Do not enter credentials on this site!" : "No phishing indicators found.",
-    conf
-  );
+  // ── 3-tier verdict display ────────────────────────────────────────────────
+  var uiClass    = isPhishing ? "danger"  : isSuspicious ? "warning" : "safe";
+  var uiIcon     = isPhishing ? "🚨"      : isSuspicious ? "⚠️"      : "✅";
+  var uiTitle    = isPhishing ? "PHISHING DETECTED" : isSuspicious ? "SUSPICIOUS SITE" : "SITE IS SAFE";
+  var uiSubtitle = isPhishing ? "Do not enter credentials on this site!"
+                : isSuspicious ? "Risk signals detected — proceed with caution"
+                : "No phishing indicators found.";
 
-  if (scanTabActive) showRiskMeter(conf, isPhishing);
+  setResultUI(uiClass, uiIcon, uiTitle, uiSubtitle, conf);
+
+  // Yellow styling for SUSPICIOUS
+  if (isSuspicious && resultBox) {
+    resultBox.style.borderColor = "rgba(255,170,0,0.4)";
+    resultBox.style.boxShadow   = "0 0 30px rgba(255,170,0,0.08)";
+    if (resultTitle)    resultTitle.style.color    = "#ffaa00";
+    if (resultIcon)     resultIcon.style.color     = "#ffaa00";
+    if (resultSubtitle) resultSubtitle.style.color = "rgba(255,170,0,0.7)";
+  }
+
+  if (scanTabActive) showRiskMeter(conf, isPhishing || isSuspicious);
 
   var exp = buildExplanation(data);
   if (threatExplanation) {
