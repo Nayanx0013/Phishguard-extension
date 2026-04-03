@@ -95,6 +95,27 @@ function saveAdminKey() {
   });
 }
 
+function verifyAdminKey() {
+  var inp = document.getElementById('s-adminKey');
+  var status = document.getElementById('admin-verify-status');
+  var val = inp ? inp.value.trim() : '';
+  if (!val) { if (status) status.textContent = '⚠️ Enter a key first'; toast('Enter admin key first', true); return; }
+  // Save first, then verify
+  chrome.storage.local.set({ adminKey:val }, function(){
+    if (status) { status.textContent = '⏳ Verifying...'; status.style.color = 'var(--txt2)'; }
+    chrome.runtime.sendMessage({ type:'VERIFY_ADMIN' }, function(r) {
+      if (r && r.success) {
+        if (status) { status.textContent = '✅ Admin key verified — access granted'; status.style.color = '#22c55e'; }
+        toast('Admin key verified ✓');
+      } else {
+        var errMsg = (r && r.data && r.data.error) ? r.data.error : (r && r.error) ? r.error : 'Verification failed';
+        if (status) { status.textContent = '❌ ' + errMsg; status.style.color = '#ef4444'; }
+        toast('Wrong key or server unreachable', true);
+      }
+    });
+  });
+}
+
 function pingServer() {
   var dot  = document.getElementById('apiDot');
   var text = document.getElementById('apiStatusText');
@@ -229,12 +250,20 @@ function renderList(type) {
     var el   = document.getElementById(elId);
     if (!el) return;
     if (!list.length) { el.innerHTML='<div class="empty-msg">NO DOMAINS ADDED YET</div>'; return; }
-    el.innerHTML = list.map(function(domain) {
-      return '<div class="domain-tag"><span>'+domain+'</span>'+
-        '<button class="del" data-domain="'+domain+'" data-type="'+type+'">×</button></div>';
-    }).join('');
-    el.querySelectorAll('.del').forEach(function(btn) {
-      btn.addEventListener('click', function(){ removeFromList(this.dataset.type, this.dataset.domain); });
+    // FIX M3: Use textContent instead of innerHTML to prevent XSS
+    el.innerHTML = '';
+    list.forEach(function(domain) {
+      var tag = document.createElement('div');
+      tag.className = 'domain-tag';
+      var span = document.createElement('span');
+      span.textContent = domain;
+      var btn = document.createElement('button');
+      btn.className = 'del';
+      btn.textContent = '\u00d7';
+      btn.addEventListener('click', function(){ removeFromList(type, domain); });
+      tag.appendChild(span);
+      tag.appendChild(btn);
+      el.appendChild(tag);
     });
   });
 }
@@ -359,7 +388,15 @@ function importSettings(input) {
   reader.onload = function(e) {
     try {
       var data = JSON.parse(e.target.result);
-      chrome.storage.local.set(data, function(){ loadAllSettings(); toast('Settings imported ✓'); });
+      // FIX M4: Only allow known safe keys to prevent arbitrary overwrites
+      var ALLOWED_KEYS = ['settings','theme','whitelist','blocklist','scanned',
+        'blocked','safe','securityScore','sessionBlocked','weeklyBlocked','installDate'];
+      var safeData = {};
+      ALLOWED_KEYS.forEach(function(key) {
+        if (data.hasOwnProperty(key)) safeData[key] = data[key];
+      });
+      // Never allow apiUrl or adminKey to be imported — security risk
+      chrome.storage.local.set(safeData, function(){ loadAllSettings(); toast('Settings imported ✓'); });
     } catch(err) { toast('Invalid file', true); }
   };
   reader.readAsText(file);
@@ -401,6 +438,8 @@ document.addEventListener('DOMContentLoaded', function() {
   if (reloadBtn) reloadBtn.addEventListener('click', reloadModels);
   if (apiSave)   apiSave.addEventListener('click',   saveApiUrl);
   if (adminSave) adminSave.addEventListener('click', saveAdminKey);
+  var adminVerify = document.getElementById('admin-verify-btn');
+  if (adminVerify) adminVerify.addEventListener('click', verifyAdminKey);
 
   var wlAdd = document.getElementById('wl-add-btn');
   var wlExp = document.getElementById('wl-export-btn');

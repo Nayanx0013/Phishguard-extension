@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PhishGuard - By Nayan Ghosh",
-  "version": "4.0.0",
+  "version": "5.1.0",
   "description": "Real-time phishing detection using ML Ensemble + VirusTotal + Google Safe Browsing + 10 threat feeds. Now with typosquatting, homograph & redirect chain detection.",
   "icons": {
     "16": "icons/icon16.png",
@@ -17,11 +17,11 @@
   ],
   "host_permissions": [
     "https://nayanx0013-phishguard-extension.hf.space/*",
-    "<all_urls>"
+    "https://mail.google.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "PhishGuard v4.0",
+    "default_title": "PhishGuard v5.1",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png"
@@ -44,7 +44,7 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src *"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://nayanx0013-phishguard-extension.hf.space https://*.hf.space"
   },
   "options_page": "options.html"
 }

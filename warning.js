@@ -113,7 +113,6 @@ if (source === "blocklist") {
 
 document.getElementById("btnBack").addEventListener("click", function() {
   chrome.tabs.getCurrent(function(tab) {
-    
     if (tab) {
       chrome.tabs.update(tab.id, { url:"chrome://newtab/" });
     } else {
@@ -142,12 +141,19 @@ proceedBtn.addEventListener("click", function() {
   } else {
     clearTimeout(proceedTimer);
     proceedClicks = 0;
+    // FIX H5: Store bypass with timestamp — expires after 24 hours
     chrome.storage.local.get("bypassList", function(d) {
       var list = d.bypassList || [];
-      if (!list.includes(blockedUrl)) list.push(blockedUrl);
+      var now = Date.now();
+      var BYPASS_TTL = 24 * 60 * 60 * 1000;
+      // Clean expired entries
+      list = list.filter(function(entry) {
+        if (typeof entry === "string") return false;
+        return (now - entry.ts) < BYPASS_TTL;
+      });
+      list.push({ url: blockedUrl, ts: now });
       chrome.storage.local.set({ bypassList:list }, function() {
         chrome.tabs.getCurrent(function(tab) {
-          
           if (tab) {
             chrome.tabs.update(tab.id, { url:blockedUrl });
           } else {

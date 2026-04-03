@@ -146,7 +146,25 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
         if (key) headers["X-Admin-Key"] = key;
         fetch(base + "/reload", { method:"POST", headers:headers })
         .then(function(r) { return r.json(); })
-        .then(function(d) { sendResponse({ success:true, data:d }); })
+        .then(function(d) { sendResponse({ success:!d.error, data:d }); })
+        .catch(function(e) { sendResponse({ success:false, error:e.message }); });
+      });
+    });
+    return true;
+  }
+
+  if (msg.type === "VERIFY_ADMIN") {
+    getApiBase(function(base) {
+      getAdminKey(function(key) {
+        if (!key) { sendResponse({ success:false, error:"No admin key saved" }); return; }
+        fetch(base + "/admin/verify", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json", "X-Admin-Key":key }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          sendResponse({ success:!d.error, data:d });
+        })
         .catch(function(e) { sendResponse({ success:false, error:e.message }); });
       });
     });
@@ -234,11 +252,21 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
       if (userWL.some(function(d){ return domain === d || domain.endsWith("."+d); })) return;
     } catch(e) {}
 
-    if (bypass.includes(tab.url)) return;
+    // FIX H5: Handle timestamped bypass entries (24h expiry)
+    var now = Date.now();
+    var BYPASS_TTL = 24 * 60 * 60 * 1000;
+    var activeBypass = bypass.filter(function(entry) {
+      if (typeof entry === "string") return true; // legacy format
+      return (now - entry.ts) < BYPASS_TTL;
+    }).map(function(entry) {
+      return typeof entry === "string" ? entry : entry.url;
+    });
+
+    if (activeBypass.includes(tab.url)) return;
 
     try {
       var bypassDomain = new URL(tab.url).hostname.toLowerCase().replace("www.","");
-      if (bypass.some(function(u) {
+      if (activeBypass.some(function(u) {
         try { return new URL(u).hostname.toLowerCase().replace("www.","") === bypassDomain; }
         catch(e) { return false; }
       })) return;
@@ -266,9 +294,17 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
       if (err || !result) return;
       var verdict   = result.result || "SAFE";
       var conf      = result.confidence || 0;
-      var threshold = s.threshold !== undefined ? s.threshold : 40;
 
-      // ── PHISHING: hard block ─────────────────────────────────────────────
+      // FIX H2: Map sensitivity to threshold values
+      var threshold;
+      if (s.threshold !== undefined) {
+        threshold = s.threshold;
+      } else {
+        var sens = s.sensitivity || "medium";
+        threshold = sens === "low" ? 70 : sens === "high" ? 20 : 40;
+      }
+
+      // ── PHISHING: hard block ───────────────────────────────────────────────
       if (verdict === "PHISHING") {
         chrome.storage.local.get(["sessionBlocked","weeklyBlocked"], function(d) {
           chrome.storage.local.set({
@@ -285,7 +321,8 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
             message: "Phishing ("+conf+"%): " + tab.url.substring(0,65)
           });
         }
-        if (conf >= threshold) {
+        // FIX H1: Only redirect if autoBlock is enabled
+        if (s.autoBlock !== false && conf >= threshold) {
           chrome.tabs.update(tabId, {
             url: chrome.runtime.getURL("warning.html") +
                  "?url=" + encodeURIComponent(tab.url) +
@@ -303,11 +340,14 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
             message: "Proceed with caution ("+conf+"%): " + tab.url.substring(0,55)
           });
         }
-        chrome.tabs.update(tabId, {
-          url: chrome.runtime.getURL("warning.html") +
-               "?url=" + encodeURIComponent(tab.url) +
-               "&conf=" + conf + "&verdict=SUSPICIOUS"
-        });
+        // FIX H1: Only redirect if autoBlock is enabled
+        if (s.autoBlock !== false) {
+          chrome.tabs.update(tabId, {
+            url: chrome.runtime.getURL("warning.html") +
+                 "?url=" + encodeURIComponent(tab.url) +
+                 "&conf=" + conf + "&verdict=SUSPICIOUS"
+          });
+        }
       }
     });
   });

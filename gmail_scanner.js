@@ -111,8 +111,11 @@ function scanAllLinks() {
   });
 }
 
+// FIX H6: Debounce MutationObserver to prevent API spam
+var _scanTimeout;
 var observer = new MutationObserver(function() {
-  scanAllLinks();
+  clearTimeout(_scanTimeout);
+  _scanTimeout = setTimeout(scanAllLinks, 500);
 });
 observer.observe(document.body, { childList:true, subtree:true });
 
